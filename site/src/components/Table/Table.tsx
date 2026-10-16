@@ -4,6 +4,11 @@
  */
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
+import {
+	ChevronDownIcon,
+	ChevronsUpDownIcon,
+	ChevronUpIcon,
+} from "lucide-react";
 
 type TableProps = React.ComponentProps<"table"> & {
 	wrapperClassName?: string;
@@ -124,6 +129,61 @@ export const TableHead: React.FC<React.ComponentProps<"th">> = ({
 			scope={scope}
 			{...props}
 		/>
+	);
+};
+
+export type SortDirection = "asc" | "desc";
+
+type SortableTableHeadProps = React.ComponentProps<"th"> & {
+	/** Current sort direction for this column, or undefined when unsorted. */
+	direction: SortDirection | undefined;
+	/** Called with the next direction: descending, then ascending, then unsorted. */
+	onSort: (direction: SortDirection | undefined) => void;
+};
+
+export const SortableTableHead: React.FC<SortableTableHeadProps> = ({
+	direction,
+	onSort,
+	children,
+	...props
+}) => {
+	const Icon =
+		direction === "asc"
+			? ChevronUpIcon
+			: direction === "desc"
+				? ChevronDownIcon
+				: ChevronsUpDownIcon;
+	return (
+		<TableHead
+			aria-sort={
+				direction === "asc"
+					? "ascending"
+					: direction === "desc"
+						? "descending"
+						: "none"
+			}
+			{...props}
+		>
+			<button
+				type="button"
+				onClick={() =>
+					onSort(
+						direction === undefined
+							? "desc"
+							: direction === "desc"
+								? "asc"
+								: undefined,
+					)
+				}
+				className="inline-flex items-center gap-1 rounded-sm border-0 bg-transparent p-0 font-semibold text-inherit cursor-pointer hover:text-content-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-content-link"
+			>
+				{children}
+				<Icon
+					aria-hidden="true"
+					className={cn("size-icon-xs", !direction && "text-content-secondary")}
+				/>
+			</button>
+		</TableHead>
 	);
 };
 

@@ -397,6 +397,10 @@ WHERE
 	FROM
 		filtered_workspaces fw
 	ORDER BY
+		-- An explicit sort takes precedence over the default ordering below.
+		-- CASE yields NULL when not selected, which leaves the order unchanged.
+		CASE WHEN @sort :: text = 'last_used_asc' THEN last_used_at END ASC,
+		CASE WHEN @sort :: text = 'last_used_desc' THEN last_used_at END DESC,
 		-- Favorited workspaces should show up first only for their owner.
 		CASE WHEN favorite AND owner_username = (SELECT users.username FROM users WHERE users.id = @requester_id) THEN 0 ELSE 1 END ASC,
 		-- Workspaces you own should show up first.

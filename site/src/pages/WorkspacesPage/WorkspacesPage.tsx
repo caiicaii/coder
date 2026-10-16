@@ -6,6 +6,7 @@ import { chatsByWorkspace } from "#/api/queries/chats";
 import { workspacePermissionsByOrganization } from "#/api/queries/organizations";
 import { templates, templateVersionRoot } from "#/api/queries/templates";
 import { workspaces } from "#/api/queries/workspaces";
+import { type WorkspaceSort, WorkspaceSorts } from "#/api/typesGenerated";
 import { useFilter } from "#/components/Filter/Filter";
 import { toast } from "#/components/Toaster/toast";
 import { useAuthenticated } from "#/hooks/useAuthenticated";
@@ -103,10 +104,14 @@ const WorkspacesPage: React.FC = () => {
 		},
 	});
 
+	const sortParam = searchParams.get("sort");
+	const sort = WorkspaceSorts.find((s) => s === sortParam);
+
 	const workspacesQueryOptions = workspaces({
 		limit: pagination.limit,
 		offset: pagination.offset,
 		q: filter.query,
+		sort,
 	});
 	const { data, error, refetch } = useQuery({
 		...workspacesQueryOptions,
@@ -191,6 +196,18 @@ const WorkspacesPage: React.FC = () => {
 				page={pagination.page}
 				limit={pagination.limit}
 				onPageChange={pagination.goToPage}
+				sort={sort}
+				onSortChange={(newSort?: WorkspaceSort) => {
+					const newParams = new URLSearchParams(searchParams);
+					if (newSort) {
+						newParams.set("sort", newSort);
+					} else {
+						newParams.delete("sort");
+					}
+					newParams.delete("page");
+					setSearchParams(newParams);
+					resetChecked();
+				}}
 				filter={filter}
 				isRunningBatchAction={batchActions.isProcessing}
 				onBatchDeleteTransition={() => setActiveBatchAction("delete")}

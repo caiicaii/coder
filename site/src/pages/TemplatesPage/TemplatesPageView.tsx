@@ -1,5 +1,6 @@
 import { cn } from "cn";
 import { ArrowRightIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
+import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router";
 import { hasError, isApiValidationError } from "#/api/errors";
 import type {
@@ -25,6 +26,8 @@ import {
 } from "#/components/PageHeader/PageHeader";
 import { Skeleton } from "#/components/Skeleton/Skeleton";
 import {
+	SortableTableHead,
+	type SortDirection,
 	Table,
 	TableBody,
 	TableCell,
@@ -287,8 +290,19 @@ export const TemplatesPageView: React.FC<TemplatesPageViewProps> = ({
 	templateUpdatePermissions,
 	workspacePermissions,
 }) => {
+	const [updatedSort, setUpdatedSort] = useState<SortDirection>();
 	const isLoading = !templates;
 	const isEmpty = !isLoading && templates.length === 0;
+	// The templates endpoint is not paginated, so sorting in the browser
+	// covers the full list.
+	const sortedTemplates =
+		templates && updatedSort
+			? templates.toSorted((a, b) => {
+					const diff =
+						new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+					return updatedSort === "asc" ? diff : -diff;
+				})
+			: templates;
 	const compatibilityModeTemplates =
 		templates?.filter(
 			(template) =>
@@ -352,7 +366,13 @@ export const TemplatesPageView: React.FC<TemplatesPageViewProps> = ({
 							{showOrganizations ? "Organization" : "Used by"}
 						</TableHead>
 						<TableHead className="w-[10%]">Build time</TableHead>
-						<TableHead className="w-[15%]">Last updated</TableHead>
+						<SortableTableHead
+							className="w-[15%]"
+							direction={updatedSort}
+							onSort={setUpdatedSort}
+						>
+							Last updated
+						</SortableTableHead>
 						<TableHead className="w-[1%]" />
 					</TableRow>
 				</TableHeader>
@@ -367,7 +387,7 @@ export const TemplatesPageView: React.FC<TemplatesPageViewProps> = ({
 							isUsingFilter={filterState.filter.used}
 						/>
 					) : (
-						templates.map((template) => (
+						sortedTemplates?.map((template) => (
 							<TemplateRow
 								key={template.id}
 								canUpdateTemplate={

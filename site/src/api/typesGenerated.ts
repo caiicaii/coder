@@ -12892,6 +12892,14 @@ export interface WorkspaceSharingSettings {
 	readonly shareable_workspace_owners: ShareableWorkspaceOwners;
 }
 
+// From codersdk/workspaces.go
+export type WorkspaceSort = "last_used_asc" | "last_used_desc";
+
+export const WorkspaceSorts: WorkspaceSort[] = [
+	"last_used_asc",
+	"last_used_desc",
+];
+
 // From codersdk/workspacebuilds.go
 export type WorkspaceStatus =
 	| "canceled"
@@ -12935,6 +12943,7 @@ export interface WorkspaceUser extends MinimalUser {
 // From codersdk/workspaces.go
 export interface WorkspacesRequest extends Pagination {
 	readonly q?: string;
+	readonly sort?: WorkspaceSort;
 }
 
 // From codersdk/workspaces.go

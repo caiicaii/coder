@@ -413,6 +413,14 @@ export const AllStatesWithFavorites: Story = {
 	},
 };
 
+export const SortedByLastUsed: Story = {
+	args: {
+		workspaces: allWorkspaces,
+		count: allWorkspaces.length,
+		sort: "last_used_desc",
+	},
+};
+
 const icons = [
 	"/icon/code.svg",
 	"/icon/aws.svg",
