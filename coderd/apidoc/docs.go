@@ -17030,6 +17030,16 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "last_used_asc",
+                            "last_used_desc"
+                        ],
+                        "type": "string",
+                        "description": "Override the default ordering",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page limit",
                         "name": "limit",

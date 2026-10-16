@@ -29,6 +29,7 @@ import type {
 	Workspace,
 	WorkspaceAgent,
 	WorkspaceApp,
+	WorkspaceSort,
 } from "#/api/typesGenerated";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { AvatarData } from "#/components/Avatar/AvatarData";
@@ -41,6 +42,7 @@ import { ExternalImage } from "#/components/ExternalImage/ExternalImage";
 import { Skeleton } from "#/components/Skeleton/Skeleton";
 import { Spinner } from "#/components/Spinner/Spinner";
 import {
+	SortableTableHead,
 	Table,
 	TableBody,
 	TableCell,
@@ -95,6 +97,8 @@ type WorkspacesTableProps = {
 	onActionSuccess: () => Promise<void>;
 	onActionError: (error: unknown) => void;
 	chatsByWorkspace?: Record<string, string>;
+	sort?: WorkspaceSort;
+	onSortChange: (sort: WorkspaceSort | undefined) => void;
 };
 
 export const WorkspacesTable: React.FC<WorkspacesTableProps> = ({
@@ -109,6 +113,8 @@ export const WorkspacesTable: React.FC<WorkspacesTableProps> = ({
 	onActionSuccess,
 	onActionError,
 	chatsByWorkspace,
+	sort,
+	onSortChange,
 }) => {
 	const dashboard = useDashboard();
 	const isLoading = !workspaces;
@@ -159,9 +165,21 @@ export const WorkspacesTable: React.FC<WorkspacesTableProps> = ({
 					<TableHead className={cn("w-1/3", hideHeaders && "invisible")}>
 						Template
 					</TableHead>
-					<TableHead className={cn("w-1/3", hideHeaders && "invisible")}>
+					<SortableTableHead
+						className={cn("w-1/3", hideHeaders && "invisible")}
+						direction={
+							sort === "last_used_asc"
+								? "asc"
+								: sort === "last_used_desc"
+									? "desc"
+									: undefined
+						}
+						onSort={(direction) =>
+							onSortChange(direction && `last_used_${direction}`)
+						}
+					>
 						Status
-					</TableHead>
+					</SortableTableHead>
 					<TableHead className="w-0">
 						<span className="sr-only">Actions</span>
 					</TableHead>

@@ -177,6 +177,7 @@ func (api *API) workspace(rw http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Tags Workspaces
 // @Param q query string false "Search query in the format `key:value`. Available keys are: owner, template, name, status, has-agent, dormant, last_used_after, last_used_before, has_external_agent, healthy, include_agent_metadata (expands each agent with the named metadata keys rather than filtering; repeat the key for multiple items)."
+// @Param sort query string false "Override the default ordering" Enums(last_used_asc,last_used_desc)
 // @Param limit query int false "Page limit"
 // @Param offset query int false "Page offset"
 // @Success 200 {object} codersdk.WorkspacesResponse
@@ -196,6 +197,20 @@ func (api *API) workspaces(rw http.ResponseWriter, r *http.Request) {
 		httpapi.Write(ctx, rw, http.StatusBadRequest, codersdk.Response{
 			Message:     "Invalid workspace search query.",
 			Validations: errs,
+		})
+		return
+	}
+
+	switch sort := codersdk.WorkspaceSort(r.URL.Query().Get("sort")); sort {
+	case "", codersdk.WorkspaceSortLastUsedAsc, codersdk.WorkspaceSortLastUsedDesc:
+		filter.Sort = string(sort)
+	default:
+		httpapi.Write(ctx, rw, http.StatusBadRequest, codersdk.Response{
+			Message: "Invalid workspace sort.",
+			Validations: []codersdk.ValidationError{{
+				Field:  "sort",
+				Detail: fmt.Sprintf("%q is not a valid sort, expected %q or %q", sort, codersdk.WorkspaceSortLastUsedAsc, codersdk.WorkspaceSortLastUsedDesc),
+			}},
 		})
 		return
 	}

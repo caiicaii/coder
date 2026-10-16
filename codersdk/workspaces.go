@@ -91,8 +91,17 @@ type WorkspaceHealth struct {
 	FailingAgents []uuid.UUID `json:"failing_agents" format:"uuid"` // FailingAgents lists the IDs of the agents that are failing, if any.
 }
 
+// WorkspaceSort overrides the default workspace list ordering.
+type WorkspaceSort string
+
+const (
+	WorkspaceSortLastUsedAsc  WorkspaceSort = "last_used_asc"
+	WorkspaceSortLastUsedDesc WorkspaceSort = "last_used_desc"
+)
+
 type WorkspacesRequest struct {
-	SearchQuery string `json:"q,omitempty"`
+	SearchQuery string        `json:"q,omitempty"`
+	Sort        WorkspaceSort `json:"sort,omitempty"`
 	Pagination
 }
 
@@ -581,6 +590,8 @@ type WorkspaceFilter struct {
 	// IncludeAgentMetadata expands each agent in the response with the
 	// named metadata keys. It does not filter the returned workspaces.
 	IncludeAgentMetadata []string `json:"include_agent_metadata,omitempty" typescript:"-"`
+	// Sort overrides the default ordering.
+	Sort WorkspaceSort `json:"sort,omitempty" typescript:"-"`
 	// FilterQuery supports a raw filter query string
 	FilterQuery string `json:"q,omitempty"`
 }
@@ -629,6 +640,9 @@ func (f WorkspaceFilter) asRequestOption() RequestOption {
 
 		q := r.URL.Query()
 		q.Set("q", strings.Join(params, " "))
+		if f.Sort != "" {
+			q.Set("sort", string(f.Sort))
+		}
 		r.URL.RawQuery = q.Encode()
 	}
 }

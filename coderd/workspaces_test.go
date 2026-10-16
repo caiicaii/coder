@@ -1153,6 +1153,48 @@ func TestWorkspacesSortOrder(t *testing.T) {
 	assert.Equal(t, expectedOrderForSecondUser, actualNames)
 }
 
+func TestWorkspacesSortLastUsed(t *testing.T) {
+	t.Parallel()
+
+	client, db := coderdtest.NewWithDatabase(t, nil)
+	owner := coderdtest.CreateFirstUser(t, client)
+
+	ctx := testutil.Context(t, testutil.WaitMedium)
+	now := dbtime.Now()
+	// The favorite makes the default ordering differ from the last-used one.
+	var favoriteID uuid.UUID
+	for _, ws := range []database.WorkspaceTable{
+		{Name: "a-workspace", LastUsedAt: now.Add(-2 * time.Hour)},
+		{Name: "b-workspace", LastUsedAt: now},
+		{Name: "c-workspace", LastUsedAt: now.Add(-1 * time.Hour)},
+	} {
+		ws.OwnerID = owner.UserID
+		ws.OrganizationID = owner.OrganizationID
+		favoriteID = dbfake.WorkspaceBuild(t, db, ws).Do().Workspace.ID
+	}
+	require.NoError(t, client.FavoriteWorkspace(ctx, favoriteID))
+
+	names := func(sort codersdk.WorkspaceSort) []string {
+		t.Helper()
+		res, err := client.Workspaces(ctx, codersdk.WorkspaceFilter{Sort: sort})
+		require.NoError(t, err)
+		names := make([]string, 0, len(res.Workspaces))
+		for _, w := range res.Workspaces {
+			names = append(names, w.Name)
+		}
+		return names
+	}
+
+	assert.Equal(t, []string{"c-workspace", "a-workspace", "b-workspace"}, names(""))
+	assert.Equal(t, []string{"b-workspace", "c-workspace", "a-workspace"}, names(codersdk.WorkspaceSortLastUsedDesc))
+	assert.Equal(t, []string{"a-workspace", "c-workspace", "b-workspace"}, names(codersdk.WorkspaceSortLastUsedAsc))
+
+	_, err := client.Workspaces(ctx, codersdk.WorkspaceFilter{Sort: "bogus"})
+	var apiErr *codersdk.Error
+	require.ErrorAs(t, err, &apiErr)
+	require.Equal(t, http.StatusBadRequest, apiErr.StatusCode())
+}
+
 func TestPostWorkspacesByOrganization(t *testing.T) {
 	t.Parallel()
 	t.Run("InvalidTemplate", func(t *testing.T) {

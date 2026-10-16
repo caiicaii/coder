@@ -42107,10 +42107,14 @@ WHERE
 	FROM
 		filtered_workspaces fw
 	ORDER BY
+		-- An explicit sort takes precedence over the default ordering below.
+		-- CASE yields NULL when not selected, which leaves the order unchanged.
+		CASE WHEN $25 :: text = 'last_used_asc' THEN last_used_at END ASC,
+		CASE WHEN $25 :: text = 'last_used_desc' THEN last_used_at END DESC,
 		-- Favorited workspaces should show up first only for their owner.
-		CASE WHEN favorite AND owner_username = (SELECT users.username FROM users WHERE users.id = $25) THEN 0 ELSE 1 END ASC,
+		CASE WHEN favorite AND owner_username = (SELECT users.username FROM users WHERE users.id = $26) THEN 0 ELSE 1 END ASC,
 		-- Workspaces you own should show up first.
-		CASE WHEN owner_username = (SELECT users.username FROM users WHERE users.id = $25) THEN 0 ELSE 1 END ASC,
+		CASE WHEN owner_username = (SELECT users.username FROM users WHERE users.id = $26) THEN 0 ELSE 1 END ASC,
 		-- Running workspaces should show up first.
 		(latest_build_completed_at IS NOT NULL AND
 			latest_build_canceled_at IS NULL AND
@@ -42122,11 +42126,11 @@ WHERE
 		LOWER(name) ASC
 	LIMIT
 		CASE
-			WHEN $27 :: integer > 0 THEN
-				$27
+			WHEN $28 :: integer > 0 THEN
+				$28
 		END
 	OFFSET
-		$26
+		$27
 ), filtered_workspaces_order_with_summary AS (
 	SELECT
 		fwo.id, fwo.created_at, fwo.updated_at, fwo.owner_id, fwo.organization_id, fwo.template_id, fwo.deleted, fwo.name, fwo.autostart_schedule, fwo.ttl, fwo.last_used_at, fwo.dormant_at, fwo.deleting_at, fwo.automatic_updates, fwo.favorite, fwo.next_start_at, fwo.group_acl, fwo.user_acl, fwo.owner_avatar_url, fwo.owner_username, fwo.owner_name, fwo.organization_name, fwo.organization_display_name, fwo.organization_icon, fwo.organization_description, fwo.template_name, fwo.template_display_name, fwo.template_icon, fwo.template_description, fwo.group_acl_display_info, fwo.user_acl_display_info, fwo.template_version_id, fwo.template_version_name, fwo.latest_build_completed_at, fwo.latest_build_canceled_at, fwo.latest_build_error, fwo.latest_build_transition, fwo.latest_build_status, fwo.latest_build_has_external_agent, fwo.latest_build_provisioner_job_id
@@ -42178,7 +42182,7 @@ WHERE
 		false, -- latest_build_has_external_agent
 		'00000000-0000-0000-0000-000000000000'::uuid -- latest_build_provisioner_job_id
 	WHERE
-		$28 :: boolean = true
+		$29 :: boolean = true
 ), total_count AS (
 	SELECT
 		count(*) AS count
@@ -42272,6 +42276,7 @@ type GetWorkspacesParams struct {
 	SharedWithUserID                      uuid.UUID    `db:"shared_with_user_id" json:"shared_with_user_id"`
 	SharedWithGroupID                     uuid.UUID    `db:"shared_with_group_id" json:"shared_with_group_id"`
 	UserID                                uuid.UUID    `db:"user_id" json:"user_id"`
+	Sort                                  string       `db:"sort" json:"sort"`
 	RequesterID                           uuid.UUID    `db:"requester_id" json:"requester_id"`
 	Offset                                int32        `db:"offset_" json:"offset_"`
 	Limit                                 int32        `db:"limit_" json:"limit_"`
@@ -42352,6 +42357,7 @@ func (q *sqlQuerier) GetWorkspaces(ctx context.Context, arg GetWorkspacesParams)
 		arg.SharedWithUserID,
 		arg.SharedWithGroupID,
 		arg.UserID,
+		arg.Sort,
 		arg.RequesterID,
 		arg.Offset,
 		arg.Limit,

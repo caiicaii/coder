@@ -45,6 +45,7 @@ const defaultProps = {
 	canChangeVersions: false,
 	onActionSuccess: vi.fn().mockResolvedValue(undefined),
 	onActionError: vi.fn(),
+	onSortChange: vi.fn(),
 };
 
 const stoppedWorkspace = { ...MockStoppedWorkspace, name: "stopped" };
@@ -186,6 +187,28 @@ describe("WorkspacesPageView", () => {
 		);
 
 		expect(onCheckChange).not.toHaveBeenCalled();
+	});
+
+	it.each([
+		[undefined, "last_used_desc"],
+		["last_used_desc", "last_used_asc"],
+		["last_used_asc", undefined],
+	] as const)("cycles the Status sort from %s to %s", async (sort, next) => {
+		const user = userEvent.setup();
+		const onSortChange = vi.fn();
+		renderWithAuth(
+			<WorkspacesPageView
+				{...defaultProps}
+				workspaces={[MockWorkspace]}
+				count={1}
+				sort={sort}
+				onSortChange={onSortChange}
+			/>,
+		);
+
+		await user.click(await screen.findByRole("button", { name: "Status" }));
+
+		expect(onSortChange).toHaveBeenCalledWith(next);
 	});
 
 	it("hides the New workspace button and explains the missing permission", async () => {

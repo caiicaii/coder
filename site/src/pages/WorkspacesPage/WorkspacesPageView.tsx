@@ -1,7 +1,7 @@
 import { PlayIcon, RotateCcwIcon, SquareIcon, TrashIcon } from "lucide-react";
 import type { UseQueryResult } from "react-query";
 import { hasError, isApiValidationError } from "#/api/errors";
-import type { Template, Workspace } from "#/api/typesGenerated";
+import type { Template, Workspace, WorkspaceSort } from "#/api/typesGenerated";
 import { ErrorAlert } from "#/components/Alert/ErrorAlert";
 import { ChevronDownIcon } from "#/components/AnimatedIcons/ChevronDown";
 import { Button } from "#/components/Button/Button";
@@ -53,6 +53,8 @@ type WorkspacesPageViewProps = {
 	onActionSuccess: () => Promise<void>;
 	onActionError: (error: unknown) => void;
 	chatsByWorkspace?: Record<string, string>;
+	sort?: WorkspaceSort;
+	onSortChange: (sort: WorkspaceSort | undefined) => void;
 };
 
 export const WorkspacesPageView: React.FC<WorkspacesPageViewProps> = ({
@@ -78,6 +80,8 @@ export const WorkspacesPageView: React.FC<WorkspacesPageViewProps> = ({
 	onActionSuccess,
 	onActionError,
 	chatsByWorkspace,
+	sort,
+	onSortChange,
 }) => {
 	// Let's say the user has 5 workspaces, but tried to hit page 100, which
 	// does not exist. In this case, the page is not valid and we want to show a
@@ -220,6 +224,8 @@ export const WorkspacesPageView: React.FC<WorkspacesPageViewProps> = ({
 					onActionSuccess={onActionSuccess}
 					onActionError={onActionError}
 					chatsByWorkspace={chatsByWorkspace}
+					sort={sort}
+					onSortChange={onSortChange}
 				/>
 			)}
 

@@ -1123,8 +1123,15 @@ curl -X GET http://coder-server:8080/api/v2/workspaces \
 | Name     | In    | Type    | Required | Description                                                                                                                                                                                                                                                                                                       |
 |----------|-------|---------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `q`      | query | string  | false    | Search query in the format `key:value`. Available keys are: owner, template, name, status, has-agent, dormant, last_used_after, last_used_before, has_external_agent, healthy, include_agent_metadata (expands each agent with the named metadata keys rather than filtering; repeat the key for multiple items). |
+| `sort`   | query | string  | false    | Override the default ordering                                                                                                                                                                                                                                                                                     |
 | `limit`  | query | integer | false    | Page limit                                                                                                                                                                                                                                                                                                        |
 | `offset` | query | integer | false    | Page offset                                                                                                                                                                                                                                                                                                       |
+
+#### Enumerated Values
+
+| Parameter | Value(s)                          |
+|-----------|-----------------------------------|
+| `sort`    | `last_used_asc`, `last_used_desc` |
 
 ### Example responses
 
